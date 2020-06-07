@@ -1,12 +1,12 @@
 function initChains()
 %% Test Variables
 NumChains   = 6;
-TurbinePos  = [magic(3),ones(3,1)];
-chainLength = randi(5,NumChains*size(TurbinePos,1),1)+1;
-chainLength = 5;
+TurbinePosD  = [magic(3),ones(3,1)];
+chainLength = randi(5,NumChains*size(TurbinePosD,1),1)+1;
+%chainLength = 5;
 
 %% Create starting OPs and build opList
-startOPs =  getChainStart(NumChains, TurbinePos);
+startOPs =  getChainStart(NumChains, TurbinePosD);
 [opList, startInd_T] = assembleOPList(startOPs,chainLength);
 
 end
@@ -18,16 +18,26 @@ function OPs = getChainStart(NumChains, TurbinePosD)
 %
 % INPUT
 % NumChains     := Int
-% TurbinePosD   := [nx3] vector, [x,y,z,d] // World coordinates & in m
+% TurbinePosD   := [nx4] vector, [x,y,z,d] // World coordinates & in m
 %
 % OUTPUT
-% OPs           := [(n*m)x3] m Chain starts [x,y,z] per turbine
+% OPs           := [(n*m)x5] m Chain starts [x,y,z,t_id, d] per turbine
 %
 % [x,y,z, ux,uy,uz, r,r_t, a,yaw,d] // World coordinates
 
+%% Allocation
+OPs = zeros(NumChains*size(TurbinePosD,1),5);
+
+% assign each OP to a turbine (first all OPs from turbine 1, then t2 etc.)
+t_ind   = repmat(1:size(TurbinePosD,1),NumChains,1);
+t_d     = repmat(TurbinePosD(:,end)',NumChains,1);
+
+OPs(:,4) = t_ind(:);
+OPs(:,5) = t_d(:);
 % ========================= TODO ========================= 
-OPs = zeros(NumChains*size(TurbinePos,1),3);
-OPs(:,1:3) = ones(NumChains*size(TurbinePos,1),3);
+% ///////////////////////// Strategy to create points ////
+OPs(:,1:3) = ones(NumChains*size(TurbinePosD,1),3);
+% ////////////////////////////////////////////////////////
 end
 
 %%
@@ -36,9 +46,10 @@ function [opList, startInd_T] = assembleOPList(startOPs,chainLength)
 % and the rest being 0
 % 
 % INPUT
-% startOPs      := [n x 3] vector [x,y,z]
+% startOPs      := [n x 3] vector [x,y,z]   // World coordinates
 % chainLength   := [n x 1] vector
 % chainLength   := Int
+% TurbinePosD   := [n x 4] vector [x,y,z,d] // World coordinates
 %
 % OUTPUT
 % opList        := [n x vars]
@@ -49,25 +60,27 @@ function [opList, startInd_T] = assembleOPList(startOPs,chainLength)
 %% Constants
 NumOfVariables  = 11;
 numChains       = size(startOPs,1);
+startInd_T      = zeros(numChains,2);
+startInd_T(:,2) = startOPs(:,4);
 
 %% Build Chains
 if length(chainLength)==numChains
     % diverse length, for every chain there is a length.
     
     % Get starting indeces
-    startInd_T = cumsum(chainLength')'-chainLength+1;
+    startInd_T(:,1) = cumsum(chainLength')'-chainLength+1;
     
     % Allocate opList
     opList = zeros(sum(chainLength), NumOfVariables);
     
 else
     % Uniform length
-    startInd_T = cumsum(ones(1,numChains)*chainLength)'-chainLength+1;
+    startInd_T(:,1) = cumsum(ones(1,numChains)*chainLength)'-chainLength+1;
     
     % Allocate opList
-    opList = zeros(startInd_T(end), NumOfVariables);
+    opList = zeros(startInd_T(end,1), NumOfVariables);
 end
 
-opList(startInd_T,1:3) = startOPs;
+opList(startInd_T(:,1),[1:3 end]) = startOPs(:,[1:3 5]);
 
 end
