@@ -41,5 +41,5 @@ optimizeControlSettingsRobustFMINCON(florisRunner, 'Yaw Optimizer', 1, ...
     deg2rad(5),5);
 
 % Visualize the outputs
-visTool = visualizer(florisRunner);
+visTool = visualizfinder(florisRunner);
 visTool.plot2dWF()
