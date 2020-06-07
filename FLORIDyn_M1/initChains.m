@@ -8,6 +8,11 @@ chainLength = randi(5,NumChains*size(TurbinePosD,1),1)+1;
 %% Create starting OPs and build opList
 startOPs =  getChainStart(NumChains, TurbinePosD);
 [opList, startInd_T] = assembleOPList(startOPs,chainLength);
+clear startOPs
+
+%% Start simulation
+
+
 
 end
 
@@ -22,8 +27,6 @@ function OPs = getChainStart(NumChains, TurbinePosD)
 %
 % OUTPUT
 % OPs           := [(n*m)x5] m Chain starts [x,y,z,t_id, d] per turbine
-%
-% [x,y,z, ux,uy,uz, r,r_t, a,yaw,d] // World coordinates
 
 %% Allocation
 OPs = zeros(NumChains*size(TurbinePosD,1),5);
@@ -56,7 +59,7 @@ function [opList, startInd_T] = assembleOPList(startOPs,chainLength)
 % startInd_T    := [n x 2] starting Indices for all chain lengths and which 
 %                   turbine they belong to.
 %
-% [x,y,z, ux,uy,uz, r,r_t, a,yaw,d] // World coordinates
+% [x,y,z, ux,uy,uz, r,r_t, a,yaw, t_id] // World coordinates
 %% Constants
 NumOfVariables  = 11;
 numChains       = size(startOPs,1);
@@ -81,6 +84,8 @@ else
     opList = zeros(startInd_T(end,1), NumOfVariables);
 end
 
-opList(startInd_T(:,1),[1:3 end]) = startOPs(:,[1:3 5]);
+opList(startInd_T(:,1),[1:3 end]) = startOPs(:,1:4);
+% To change last entry to diameter uncomment the following line
+% opList(startInd_T(:,1),[1:3 end]) = startOPs(:,[1:3 5]);
 
 end
